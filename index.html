@@ -1,0 +1,459 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#172554">
+
+    <title>MiniBiz - Business Manager</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header>
+        <h1>MiniBiz</h1>
+        <p>Your Business, Simplified.</p>
+    </header>
+
+    <main>
+
+        <h2>Welcome to MiniBiz!</h2>
+        <p>Manage your small business with ease.</p>
+
+        <section class="dashboard">
+
+            <div class="card">
+                <h3>Total Sales</h3>
+                <p id="sales">₹0</p>
+            </div>
+
+            <div class="card">
+                <h3>Total Expenses</h3>
+                <p id="expenses">₹0</p>
+            </div>
+
+            <div class="card">
+                <h3>Net Profit</h3>
+                <p id="profit">₹0</p>
+            </div>
+
+        </section>
+
+        <section class="history">
+
+            <div class="section-heading">
+                <h2>Recent Transactions</h2>
+            </div>
+
+            <div id="transactionList">
+                <p class="empty">No transactions yet.</p>
+            </div>
+
+        </section>
+
+              <!-- Product Inventory -->
+
+        <section class="inventory">
+
+            <div class="section-heading">
+                <h2>Product Inventory</h2>
+                <p>Manage your available products.</p>
+            </div>
+
+            <div id="productList">
+                <p class="empty">No products added yet.</p>
+            </div>
+
+            <button id="addProductButton" class="primary-button">
+                + Add New Product
+            </button>
+
+        </section>
+
+        <!-- Add Product Form -->
+
+        <section id="productForm" class="form-card" hidden>
+
+            <h2>Add New Product</h2>
+
+            <form id="productEntryForm">
+
+                <label for="productName">Product Name</label>
+
+                <input
+                    type="text"
+                    id="productName"
+                    placeholder="e.g. Handmade Doily"
+                    maxlength="60"
+                    required
+                >
+
+                <label for="productPrice">Selling Price (₹)</label>
+
+                <input
+                    type="number"
+                    id="productPrice"
+                    placeholder="Enter price"
+                    min="0.01"
+                    step="0.01"
+                    required
+                >
+
+                <label for="productStock">Available Quantity</label>
+
+                <input
+                    type="number"
+                    id="productStock"
+                    placeholder="Enter stock quantity"
+                    min="0"
+                    step="1"
+                    required
+                >
+
+                <div class="form-buttons">
+
+                    <button type="submit" class="primary-button">
+                        Save Product
+                    </button>
+
+                    <button type="button" id="cancelProductButton"
+                        class="cancel-button">
+                        Cancel
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+
+       <button id="startButton" class="primary-button">
+            + Add Transaction
+        </button>
+
+        <section id="transactionForm" class="form-card" hidden>
+
+            <h2>Add Transaction</h2>
+
+            <form id="entryForm">
+
+                <label for="type">Transaction Type</label>
+
+                <select id="type" required>
+                    <option value="Sale">Sale / Income</option>
+                    <option value="Expense">Business Expense</option>
+                </select>
+
+              
+
+<div id="productPicker">
+
+    <label for="saleProduct">Select Product</label>
+
+    <select id="saleProduct">
+        <option value="">Manual sale (no product)</option>
+    </select>
+
+    <div id="quantityWrapper" hidden>
+
+        <label for="saleQuantity">Quantity Sold</label>
+
+        <input
+            type="number"
+            id="saleQuantity"
+            value="1"
+            min="1"
+            step="1"
+        >
+
+        <button type="button" id="addToCartButton">
+            Add Product to Sale
+        </button>
+
+    </div>
+
+    <div id="saleCart" hidden>
+
+        <h3>Products in This Sale</h3>
+
+        <div id="cartItemsList">
+            <p>No products added yet.</p>
+        </div>
+
+        <h3>
+            Grand Total: <span id="cartTotal">₹0.00</span>
+        </h3>
+
+        <button type="button" id="clearCartButton">
+            Clear Products
+        </button>
+
+    </div>
+
+</div>
+              
+                <label for="amount">Amount (₹)</label>
+
+                <input
+                    type="number"
+                    id="amount"
+                    placeholder="Enter amount"
+                    min="0.01"
+                    step="0.01"
+                    required
+                >
+
+                <label for="description">Description</label>
+
+                <input
+                    type="text"
+                    id="description"
+                    placeholder="e.g. Product sold"
+                    maxlength="80"
+                    required
+                >
+
+                <div class="form-buttons">
+
+                    <button type="submit" class="primary-button">
+                        Save Transaction
+                    </button>
+
+                    <button type="button" id="cancelButton" class="cancel-button">
+                        Cancel
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+      
+        <!-- Data Backup and Restore -->
+
+        <section class="backup-section">
+
+            <h2>Data Protection</h2>
+
+            <p>Keep your business records safe.</p>
+
+            <button type="button" id="backupButton"
+                class="primary-button">
+                Prepare Backup
+            </button>
+
+            <button type="button" id="restoreButton"
+                class="cancel-button">
+                Restore Backup
+            </button>
+          
+          <div id="backupInstructions" style="display:none;">
+    <p>Copy the backup data below and save it in a file named MiniBiz-Backup.json.</p>
+
+    <textarea id="backupText" readonly rows="10"></textarea>
+
+    <button type="button" id="copyBackupButton">
+        Copy Backup Data
+    </button>
+          </div>
+
+            <input
+                type="file"
+                id="backupFile"
+                accept=".json,application/json"
+                hidden
+            >
+
+            <p class="backup-note">
+                Your backup stays on your device until you
+                choose to store or share it.
+            </p>
+
+        </section>
+
+      
+<section class="report-section">
+
+    <h2>Business Reports</h2>
+
+    <button type="button" id="openReportModalButton">
+        Select Report Period
+    </button>
+
+    <div id="reportSummary" class="report-summary">
+        <p>Select a date to view your report.</p>
+    </div>
+
+    <div id="reportCharts" class="report-charts"></div>
+
+</section>
+
+
+<!-- Report Date Selection Popup -->
+
+<div id="reportModal" class="product-modal" hidden>
+
+    <div class="product-modal-box">
+
+        <h2>Select Report Period</h2>
+
+        <p>Choose the period and date for your business report.</p>
+
+        <form id="reportModalForm">
+
+            
+<label for="reportPeriod">Report Period</label>
+
+<select id="reportPeriod">
+    <option value="daily">Daily</option>
+    <option value="weekly">Weekly</option>
+    <option value="monthly">Monthly</option>
+    <option value="custom">Custom Date Range</option>
+</select>
+
+
+<!-- Start Date -->
+
+<label>Start Date</label>
+
+<input type="date" id="reportDate" hidden>
+
+<button type="button" id="startDateButton" class="calendar-date-button">
+    Choose Start Date
+</button>
+
+
+<!-- End Date -->
+
+<div id="reportEndDateField" hidden>
+
+    <label>End Date</label>
+
+    <input type="date" id="reportEndDate" hidden>
+
+    <button type="button" id="endDateButton" class="calendar-date-button">
+        Choose End Date
+    </button>
+
+</div>
+
+
+<!-- Custom Calendar -->
+
+<div id="customCalendar" class="custom-calendar" hidden>
+
+    <div class="calendar-header">
+
+        <button type="button" id="calendarPrev">
+            &#10094;
+        </button>
+
+        <h3 id="calendarMonth"></h3>
+
+        <button type="button" id="calendarNext">
+            &#10095;
+        </button>
+
+    </div>
+
+    <div class="calendar-weekdays">
+        <span>Sun</span>
+        <span>Mon</span>
+        <span>Tue</span>
+        <span>Wed</span>
+        <span>Thu</span>
+        <span>Fri</span>
+        <span>Sat</span>
+    </div>
+
+    <div id="calendarDays" class="calendar-days"></div>
+
+    <button type="button" id="calendarClose">
+        Done
+    </button>
+
+</div>
+
+
+
+            <div class="product-modal-actions">
+
+    <button type="button" id="cancelReportModalButton">
+        Cancel
+    </button>
+
+    <button type="submit" id="generateReportButton">
+        Generate Report
+    </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+    </main>
+
+    <footer>
+        <p>MiniBiz © 2026</p>
+    </footer>
+  
+<!-- MiniBiz Product Management Popup -->
+
+<div id="productModal" class="product-modal" hidden>
+
+    <div class="product-modal-box">
+
+        <h2 id="productModalTitle">Edit Product</h2>
+
+        <p id="productModalMessage"></p>
+
+        <form id="productModalForm">
+
+            <div id="modalNameField">
+                <label for="modalProductName">Product Name</label>
+                <input type="text" id="modalProductName">
+            </div>
+
+            <div id="modalPriceField">
+                <label for="modalProductPrice">Selling Price (₹)</label>
+                <input type="number" id="modalProductPrice" min="0.01" step="0.01">
+            </div>
+
+            <div id="modalStockField">
+                <label for="modalProductStock">Stock Quantity</label>
+                <input type="number" id="modalProductStock" min="0" step="1">
+            </div>
+
+            <div class="product-modal-actions">
+                
+                <button type="button" id="modalCancelButton">
+                    Cancel
+                </button>
+
+                <button type="submit" id="modalSubmitButton">
+                    Save Changes
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+  <script src="app.js"></script>
+  
+</body>
+
+</html>
+
+  
