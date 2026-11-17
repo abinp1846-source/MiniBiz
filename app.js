@@ -984,3 +984,495 @@ function updateSaleFields() {
 
         amountInput.readOnly = false;
       
+        if (isSale) {
+            amountInput.value = "";
+        }
+
+    }
+
+}
+
+// Populate sale product dropdown
+
+function populateSaleProducts() {
+
+    saleProduct.replaceChildren();
+
+    const manualOption = document.createElement("option");
+
+    manualOption.value = "";
+    manualOption.textContent = "Manual sale (no product)";
+
+    saleProduct.appendChild(manualOption);
+
+    products.forEach(function(product) {
+
+        const option = document.createElement("option");
+
+        option.value = product.id;
+
+        option.textContent =
+            product.name + " (" + product.stock + " available)";
+
+        option.disabled = product.stock === 0;
+
+        saleProduct.appendChild(option);
+
+    });
+
+}
+
+// Display sale cart
+
+function displaySaleCart() {
+
+    const cartItemsList =
+        document.getElementById("cartItemsList");
+
+    const saleCartBox =
+        document.getElementById("saleCart");
+
+    const cartTotal =
+        document.getElementById("cartTotal");
+
+    cartItemsList.replaceChildren();
+
+    if (saleCart.length === 0) {
+
+        saleCartBox.hidden = true;
+
+        cartTotal.textContent = "₹0.00";
+
+        return;
+    }
+
+    saleCartBox.hidden = false;
+
+    let total = 0;
+
+    saleCart.forEach(function(item) {
+
+        total += item.subtotal;
+
+        const itemRow = document.createElement("p");
+
+        itemRow.textContent =
+            item.name + " × " + item.quantity +
+            " = " + formatMoney(item.subtotal);
+
+        cartItemsList.appendChild(itemRow);
+
+    });
+
+    cartTotal.textContent = formatMoney(total);
+
+}
+
+// Add product to sale cart
+
+function addToSaleCart() {
+
+    const productId = saleProduct.value;
+    const quantity = Number(saleQuantity.value);
+
+    const selectedProduct = products.find(
+        p => p.id === productId
+    );
+
+    if (!selectedProduct) {
+        showMiniBizAlert("Please select a product first.");
+        return;
+    }
+
+    if (!Number.isSafeInteger(quantity) || quantity < 1) {
+        showMiniBizAlert("Please enter a valid quantity.");
+        return;
+    }
+
+    const existingItem = saleCart.find(
+        item => item.productId === productId
+    );
+
+    const alreadyAdded = existingItem
+        ? existingItem.quantity
+        : 0;
+
+    if (alreadyAdded + quantity > selectedProduct.stock) {
+        showMiniBizAlert("Not enough stock available!");
+        return;
+    }
+
+    if (existingItem) {
+
+        existingItem.quantity += quantity;
+
+        existingItem.subtotal =
+            existingItem.price * existingItem.quantity;
+
+    } else {
+
+        saleCart.push({
+
+            productId: selectedProduct.id,
+            name: selectedProduct.name,
+            price: selectedProduct.price,
+            quantity: quantity,
+            subtotal: selectedProduct.price * quantity
+
+        });
+
+    }
+
+    displaySaleCart();
+
+    saleQuantity.value = 1;
+
+    updateSaleFields();
+
+}
+
+// Cart buttons
+
+document.getElementById("addToCartButton").addEventListener(
+    "click",
+    addToSaleCart
+);
+
+document.getElementById("clearCartButton").addEventListener(
+    "click",
+    function() {
+
+        saleCart = [];
+
+        displaySaleCart();
+
+        updateSaleFields();
+
+    }
+);
+
+// Update sale fields when selections change
+
+typeInput.addEventListener("change", updateSaleFields);
+
+saleProduct.addEventListener("change", updateSaleFields);
+
+saleQuantity.addEventListener("input", updateSaleFields);
+
+// ==========================================
+// 8. SAVE TRANSACTION
+// ==========================================
+
+entryForm.addEventListener("submit", function(event) {
+
+    event.preventDefault();
+
+    const type = typeInput.value;
+
+    const description = descriptionInput.value.trim();
+
+    let value = Number(amountInput.value);
+
+    let finalDescription = description || type;
+
+    let soldItems = [];
+
+    if (type === "Sale") {
+
+        if (saleCart.length > 0) {
+
+            // Validate all products before changing stock
+
+            for (const item of saleCart) {
+
+                const product = products.find(
+                    p => p.id === item.productId
+                );
+
+                if (!product) {
+                    showMiniBizAlert("A product in your cart no longer exists.");
+                    return;
+                }
+
+                if (
+                    !Number.isSafeInteger(item.quantity) ||
+                    item.quantity < 1 ||
+                    item.quantity > product.stock
+                ) {
+                    showMiniBizAlert("Not enough stock available for " + item.name);
+                    return;
+                }
+
+            }
+
+            // Calculate total
+
+            value = saleCart.reduce(
+                (total, item) => total + item.subtotal,
+                0
+            );
+
+            // Prepare sale details
+
+            soldItems = saleCart.map(item => ({
+
+                productId: item.productId,
+                name: item.name,
+                price: item.price,
+                quantity: item.quantity,
+                subtotal: item.subtotal
+
+            }));
+
+            finalDescription = soldItems.map(
+                item => item.name + " × " + item.quantity
+            ).join(", ");
+
+            // Deduct stock
+
+            soldItems.forEach(function(item) {
+
+                const product = products.find(
+                    p => p.id === item.productId
+                );
+
+                product.stock -= item.quantity;
+
+            });
+
+            saveProducts();
+
+        } else {
+
+            // Prevent a selected product from being sold
+            // without adding it to the cart
+
+            if (saleProduct.value !== "") {
+
+                showMiniBizAlert(
+                    "Please add the selected product to the sale first."
+                );
+
+                return;
+
+            }
+
+        }
+
+    }
+
+    if (!Number.isFinite(value) || value <= 0) {
+
+        showMiniBizAlert("Please enter a valid amount.");
+
+        return;
+
+    }
+
+    // Update financial totals
+
+    if (type === "Sale") {
+        sales += value;
+    } else {
+        expenses += value;
+    }
+
+    // Save transaction
+
+    transactions.push({
+
+        type: type,
+        amount: value,
+        description: finalDescription,
+        quantity: null,
+        items: soldItems,
+        date: new Date().toLocaleString("en-IN")
+
+    });
+
+    saveData();
+
+    updateDashboard();
+
+    displayTransactions();
+
+    displayProducts();
+
+    populateSaleProducts();
+
+    // Clear cart after successful transaction
+
+    saleCart = [];
+
+    displaySaleCart();
+
+    transactionForm.hidden = true;
+
+    entryForm.reset();
+
+    updateSaleFields();
+
+    showMiniBizAlert("Transaction saved successfully!");
+
+});
+
+// ==========================================
+// 9. INVENTORY DISPLAY
+// ==========================================
+
+function displayProducts() {
+
+    productList.replaceChildren();
+
+    if (products.length === 0) {
+
+        const empty = document.createElement("p");
+
+        empty.className = "empty";
+        empty.textContent = "No products added yet.";
+
+        productList.appendChild(empty);
+
+        return;
+
+    }
+
+    products.forEach(function(product) {
+
+        const card = document.createElement("div");
+
+        card.className = "product-card";
+
+        const top = document.createElement("div");
+
+        top.className = "product-top";
+
+        const details = document.createElement("div");
+
+        const name = document.createElement("div");
+
+        name.className = "product-name";
+        name.textContent = product.name;
+
+        const price = document.createElement("div");
+
+        price.className = "product-price";
+        price.textContent = formatMoney(product.price);
+
+        details.append(name, price);
+
+        const status = document.createElement("span");
+
+        status.className = "stock-status";
+
+        if (product.stock === 0) {
+
+            status.textContent = "Out of stock";
+            status.classList.add("out-stock");
+
+        } else if (product.stock <= 5) {
+
+            status.textContent = "Low stock";
+            status.classList.add("low-stock");
+
+        } else {
+
+            status.textContent = "In stock";
+
+        }
+
+        top.append(details, status);
+
+        const quantity = document.createElement("p");
+
+        quantity.className = "product-quantity";
+
+        quantity.textContent =
+            "Available quantity: " + product.stock;
+
+        // Product management buttons
+
+        const actions = document.createElement("div");
+
+        actions.className = "product-actions";
+
+        const editButton = document.createElement("button");
+
+        editButton.className = "edit-product-btn";
+        editButton.textContent = "Edit";
+
+        editButton.addEventListener("click", function() {
+            editProduct(product.id);
+        });
+
+        const restockButton = document.createElement("button");
+
+        restockButton.className = "restock-product-btn";
+        restockButton.textContent = "Restock";
+
+        restockButton.addEventListener("click", function() {
+            restockProduct(product.id);
+        });
+
+        const deleteButton = document.createElement("button");
+
+        deleteButton.className = "delete-product-btn";
+        deleteButton.textContent = "Delete";
+
+        deleteButton.addEventListener("click", function() {
+            deleteProduct(product.id);
+        });
+
+        actions.append(
+            editButton,
+            restockButton,
+            deleteButton
+        );
+
+        card.append(top, quantity, actions);
+
+        productList.appendChild(card);
+
+    });
+
+}
+
+// ==========================================
+// 10. PRODUCT MANAGEMENT POPUP
+// ==========================================
+
+const productModal = document.getElementById("productModal");
+
+const productModalForm =
+    document.getElementById("productModalForm");
+
+const productModalTitle =
+    document.getElementById("productModalTitle");
+
+const productModalMessage =
+    document.getElementById("productModalMessage");
+
+const modalNameField =
+    document.getElementById("modalNameField");
+
+const modalPriceField =
+    document.getElementById("modalPriceField");
+
+const modalStockField =
+    document.getElementById("modalStockField");
+
+const modalProductName =
+    document.getElementById("modalProductName");
+
+const modalProductPrice =
+    document.getElementById("modalProductPrice");
+
+const modalProductStock =
+    document.getElementById("modalProductStock");
+
+const modalSubmitButton =
+    document.getElementById("modalSubmitButton");
+
+const modalCancelButton =
+    document.getElementById("modalCancelButton");
+                
