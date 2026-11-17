@@ -1476,3 +1476,497 @@ const modalSubmitButton =
 const modalCancelButton =
     document.getElementById("modalCancelButton");
                 
+let currentProductAction = "";
+let currentProductId = "";
+
+// Open product popup
+
+function openProductModal(action, productId) {
+
+    const product = products.find(p => p.id === productId);
+
+    if (!product) return;
+
+    currentProductAction = action;
+    currentProductId = productId;
+
+    productModalForm.reset();
+
+    modalNameField.hidden = false;
+    modalPriceField.hidden = false;
+    modalStockField.hidden = false;
+
+    modalSubmitButton.style.background = "#1769aa";
+
+    const stockLabel = document.querySelector(
+        'label[for="modalProductStock"]'
+    );
+
+    if (action === "edit") {
+
+        productModalTitle.textContent = "Edit Product";
+
+        productModalMessage.textContent =
+            "Update your product details.";
+
+        modalProductName.value = product.name;
+        modalProductPrice.value = product.price;
+        modalProductStock.value = product.stock;
+
+        stockLabel.textContent = "Stock Quantity";
+
+        modalSubmitButton.textContent = "Save Changes";
+
+    } else if (action === "restock") {
+
+        productModalTitle.textContent = "Restock Product";
+
+        productModalMessage.textContent =
+            "Add more units of " + product.name + ".";
+
+        modalNameField.hidden = true;
+        modalPriceField.hidden = true;
+
+        modalProductStock.value = 1;
+
+        stockLabel.textContent = "Additional Quantity";
+
+        modalSubmitButton.textContent = "Add Stock";
+
+    } else if (action === "delete") {
+
+        productModalTitle.textContent = "Delete Product?";
+
+        productModalMessage.textContent =
+            "Delete " + product.name +
+            "? Previous sales records will remain unchanged.";
+
+        modalNameField.hidden = true;
+        modalPriceField.hidden = true;
+        modalStockField.hidden = true;
+
+        modalSubmitButton.textContent = "Delete Product";
+
+        modalSubmitButton.style.background = "#c62828";
+
+    }
+
+    productModal.hidden = false;
+
+}
+
+// Edit product
+
+function editProduct(productId) {
+
+    if (saleCart.some(item => item.productId === productId)) {
+
+        showMiniBizAlert("Please finish or clear the current sale first.");
+
+        return;
+
+    }
+
+    openProductModal("edit", productId);
+
+}
+
+// Restock product
+
+function restockProduct(productId) {
+
+    openProductModal("restock", productId);
+
+}
+
+
+// Delete product
+
+
+function deleteProduct(productId) {
+
+    if (saleCart.some(item => item.productId === productId)) {
+
+        showMiniBizAlert("Please finish or clear the current sale first.");
+
+        return;
+
+    }
+
+    openProductModal("delete", productId);
+
+}
+
+
+
+// Cancel product popup
+
+modalCancelButton.addEventListener("click", function() {
+
+    productModal.hidden = true;
+
+});
+
+// Save product popup action
+
+productModalForm.addEventListener("submit", function(event) {
+
+    event.preventDefault();
+
+    const product = products.find(
+        p => p.id === currentProductId
+    );
+
+    if (!product) {
+
+        productModal.hidden = true;
+
+        return;
+
+    }
+
+    if (currentProductAction === "edit") {
+
+        const name = modalProductName.value.trim();
+
+        const price = Number(modalProductPrice.value);
+
+        const stock = Number(modalProductStock.value);
+
+        if (
+            !name ||
+            !Number.isFinite(price) ||
+            price <= 0 ||
+            !Number.isSafeInteger(stock) ||
+            stock < 0
+        ) {
+
+            showMiniBizAlert("Please enter valid product details.");
+
+            return;
+
+        }
+
+        product.name = name;
+        product.price = price;
+        product.stock = stock;
+
+    } else if (currentProductAction === "restock") {
+
+        const quantity = Number(modalProductStock.value);
+
+        if (
+            !Number.isSafeInteger(quantity) ||
+            quantity < 1 ||
+            !Number.isSafeInteger(product.stock + quantity)
+        ) {
+
+            showMiniBizAlert("Please enter a valid stock quantity.");
+
+            return;
+
+        }
+
+        product.stock += quantity;
+
+    } else if (currentProductAction === "delete") {
+
+        products = products.filter(
+            p => p.id !== currentProductId
+        );
+
+    }
+
+    saveProducts();
+
+    productModal.hidden = true;
+
+    displayProducts();
+
+    populateSaleProducts();
+
+    updateSaleFields();
+
+      if (currentProductAction === "edit") {
+
+        showMiniBizAlert("Product updated successfully!");
+
+    } else if (currentProductAction === "restock") {
+
+        showMiniBizAlert("Stock updated successfully!");
+
+    } else if (currentProductAction === "delete") {
+
+        showMiniBizAlert("Product deleted successfully!");
+
+      }
+
+});
+
+// ==========================================
+// 11. ADD NEW PRODUCT
+// ==========================================
+
+// Open product form
+
+addProductButton.addEventListener("click", function() {
+
+    productForm.hidden = false;
+
+    productEntryForm.reset();
+
+    productForm.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+
+});
+
+// Cancel product form
+
+cancelProductButton.addEventListener("click", function() {
+
+    productForm.hidden = true;
+
+    productEntryForm.reset();
+
+});
+
+// Add new product
+
+productEntryForm.addEventListener("submit", function(event) {
+
+    event.preventDefault();
+
+    const name = document.getElementById("productName")
+        .value.trim();
+
+    const price = Number(
+        document.getElementById("productPrice").value
+    );
+
+    const stockInput =
+        document.getElementById("productStock").value;
+
+    const stock = Number(stockInput);
+
+    if (
+        !name ||
+        !Number.isFinite(price) ||
+        price <= 0 ||
+        stockInput.trim() === "" ||
+        !Number.isSafeInteger(stock) ||
+        stock < 0
+    ) {
+
+        showMiniBizAlert("Please enter valid product details.");
+
+        return;
+
+    }
+
+    products.push({
+
+        id: Date.now().toString() +
+            Math.random().toString(36).slice(2),
+
+        name: name,
+
+        price: price,
+
+        stock: stock
+
+    });
+
+    saveProducts();
+
+    displayProducts();
+
+    productForm.hidden = true;
+
+    productEntryForm.reset();
+
+    showMiniBizAlert("Product added successfully!");
+
+});
+
+// ==========================================
+// END OF PART 1
+// ==========================================
+
+
+// ==========================================
+// 12. LOAD SAVED INFORMATION
+// ==========================================
+
+updateDashboard();
+displayTransactions();
+displayProducts();
+populateSaleProducts();
+updateSaleFields();
+
+
+// ==========================================
+// 13. BACKUP AND RESTORE
+// ==========================================
+
+const backupButton =
+    document.getElementById("backupButton");
+
+const restoreButton =
+    document.getElementById("restoreButton");
+
+const backupFile =
+    document.getElementById("backupFile");
+
+const backupInstructions =
+    document.getElementById("backupInstructions");
+
+const backupText =
+    document.getElementById("backupText");
+
+const copyBackupButton =
+    document.getElementById("copyBackupButton");
+
+
+// Prepare backup
+
+backupButton.addEventListener("click", function() {
+
+    const backupData = {
+
+        app: "MiniBiz",
+        version: 1,
+        backupDate: new Date().toISOString(),
+        sales: sales,
+        expenses: expenses,
+        transactions: transactions,
+        products: products
+
+    };
+
+    backupText.value = JSON.stringify(backupData, null, 2);
+
+    backupInstructions.style.display = "block";
+
+});
+
+
+// Copy backup data
+
+copyBackupButton.addEventListener("click", async function() {
+
+    backupText.focus();
+
+    backupText.select();
+
+    try {
+
+        await navigator.clipboard.writeText(backupText.value);
+
+        showMiniBizAlert("Backup data copied successfully!");
+
+    } catch (error) {
+
+        const copied = document.execCommand("copy");
+
+        if (copied) {
+
+            showMiniBizAlert("Backup data copied successfully!");
+
+        } else {
+
+            showMiniBizAlert(
+                "Please select and copy the backup text manually."
+            );
+
+        }
+
+    }
+
+});
+
+
+// Open backup file selector
+
+restoreButton.addEventListener("click", function() {
+
+    backupFile.click();
+
+});
+
+
+// Restore backup
+
+backupFile.addEventListener("change", function() {
+
+    const file = backupFile.files[0];
+
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = async function() {
+
+        try {
+
+            const data = JSON.parse(reader.result);
+
+            const validTransactions =
+                Array.isArray(data.transactions) &&
+                data.transactions.every(item =>
+
+                    item &&
+                    ["Sale", "Expense"].includes(item.type) &&
+                    Number.isFinite(item.amount) &&
+                    item.amount > 0 &&
+                    typeof item.date === "string"
+
+                );
+
+            const validProducts =
+                Array.isArray(data.products) &&
+                data.products.every(item =>
+
+                    item &&
+                    typeof item.id === "string" &&
+                    typeof item.name === "string" &&
+                    item.name.trim().length > 0 &&
+                    Number.isFinite(item.price) &&
+                    item.price > 0 &&
+                    Number.isSafeInteger(item.stock) &&
+                    item.stock >= 0
+
+                );
+
+            const validBackup =
+                data.app === "MiniBiz" &&
+                data.version === 1 &&
+                Number.isFinite(data.sales) &&
+                data.sales >= 0 &&
+                Number.isFinite(data.expenses) &&
+                data.expenses >= 0 &&
+                validTransactions &&
+                validProducts;
+
+            if (!validBackup) {
+
+                showMiniBizAlert("Invalid MiniBiz backup file.");
+
+                return;
+
+            }
+
+            const confirmed = await showMiniBizConfirm(
+                "Restoring this backup will replace your " +
+                "current MiniBiz records. Continue?"
+            );
+
+            if (!confirmed) return;
+
+            sales = data.sales;
+            expenses = data.expenses;
+
+            transactions = data.transactions;
+            products = data.products;
+                                            
