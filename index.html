@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#172554">
+  <link rel="manifest" href="manifest.json">
 
     <title>MiniBiz - Business Manager</title>
 
@@ -593,9 +594,18 @@
 </div>
 
   <script src="app.js"></script>
-  
+
+  <script>
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./service-worker.js")
+            .then(() => console.log("MiniBiz service worker registered"))
+            .catch(error => console.error("Service worker error:", error));
+    });
+}
+  </script>
+
 </body>
 
 </html>
 
-          
