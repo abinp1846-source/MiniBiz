@@ -2462,3 +2462,497 @@ function renderCalendar() {
     // Empty spaces before first day
 
     for (let i = 0; i < firstDay; i++) {
+        
+        const blank = document.createElement("span");
+
+        calendarDays.appendChild(blank);
+
+    }
+
+    // Create calendar dates
+
+    for (let day = 1; day <= daysInMonth; day++) {
+
+        const dateValue =
+            year + "-" +
+            String(month + 1).padStart(2, "0") + "-" +
+            String(day).padStart(2, "0");
+
+        const button = document.createElement("button");
+
+        button.type = "button";
+
+        button.textContent = day;
+
+        if (dateValue === calendarTargetInput.value) {
+
+            button.classList.add("selected");
+
+        }
+
+        if (dateValue === today) {
+
+            button.classList.add("today");
+
+        }
+
+        button.addEventListener("click", function() {
+
+            calendarTargetInput.value = dateValue;
+
+            calendarTargetButton.textContent =
+                formatCalendarDate(dateValue);
+
+            customCalendar.hidden = true;
+
+            updateReportCharts();
+
+        });
+
+        calendarDays.appendChild(button);
+
+    }
+
+}
+
+
+// ==========================================
+// 21. OPEN CUSTOM CALENDAR
+// ==========================================
+
+// Start date calendar
+
+startDateButton.addEventListener("click", function() {
+
+    calendarTargetInput = reportDate;
+
+    calendarTargetButton = startDateButton;
+
+    calendarViewDate = reportDate.value
+        ? new Date(reportDate.value + "T00:00:00")
+        : new Date();
+
+    renderCalendar();
+
+    customCalendar.hidden = false;
+
+});
+
+
+// End date calendar
+
+endDateButton.addEventListener("click", function() {
+
+    calendarTargetInput = reportEndDate;
+
+    calendarTargetButton = endDateButton;
+
+    calendarViewDate = reportEndDate.value
+        ? new Date(reportEndDate.value + "T00:00:00")
+        : new Date(reportDate.value + "T00:00:00");
+
+    renderCalendar();
+
+    customCalendar.hidden = false;
+
+});
+
+
+// ==========================================
+// 22. CALENDAR MONTH NAVIGATION
+// ==========================================
+
+// Previous month
+
+calendarPrev.addEventListener("click", function() {
+
+    calendarViewDate = new Date(
+
+        calendarViewDate.getFullYear(),
+
+        calendarViewDate.getMonth() - 1,
+
+        1
+
+    );
+
+    renderCalendar();
+
+});
+
+
+// Next month
+
+calendarNext.addEventListener("click", function() {
+
+    calendarViewDate = new Date(
+
+        calendarViewDate.getFullYear(),
+
+        calendarViewDate.getMonth() + 1,
+
+        1
+
+    );
+
+    renderCalendar();
+
+});
+
+
+// Close calendar
+
+calendarClose.addEventListener("click", function() {
+
+    customCalendar.hidden = true;
+
+});
+
+
+// ==========================================
+// 23. INITIAL DATE LABELS
+// ==========================================
+
+startDateButton.textContent =
+    formatCalendarDate(reportDate.value);
+
+endDateButton.textContent =
+    formatCalendarDate(reportEndDate.value);
+
+
+// ==========================================
+// 24. END OF PART 2
+// ==========================================
+
+
+// ==========================================
+// 25. REPORT TEXT SAFETY
+// ==========================================
+
+function escapeReportText(value) {
+
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+
+// ==========================================
+// 26. UPDATE REPORT CHARTS
+// ==========================================
+
+function updateReportCharts() {
+
+    if (!reportCharts) {
+        return;
+    }
+
+    const records = getReportTransactions();
+
+    // Clear charts if the selected date range is invalid.
+    if (records === null) {
+        reportCharts.innerHTML = "";
+        return;
+    }
+
+    const totalSales = records
+        .filter(item => item.type === "Sale")
+        .reduce((total, item) => total + Number(item.amount || 0), 0);
+
+    const totalExpenses = records
+        .filter(item => item.type === "Expense")
+        .reduce((total, item) => total + Number(item.amount || 0), 0);
+
+
+    // ======================================
+    // SALES VS EXPENSES
+    // ======================================
+
+    const maximumAmount = Math.max(
+        totalSales,
+        totalExpenses,
+        1
+    );
+
+    const salesWidth = (totalSales / maximumAmount) * 100;
+    const expensesWidth = (totalExpenses / maximumAmount) * 100;
+
+
+    // ======================================
+    // PRODUCT-WISE SALES BREAKDOWN
+    // ======================================
+
+    const productSales = {};
+
+    records
+        .filter(item => item.type === "Sale")
+        .forEach(item => {
+
+            // Multi-product sale transactions.
+            if (
+                Array.isArray(item.items) &&
+                item.items.length > 0
+            ) {
+
+                item.items.forEach(soldItem => {
+
+                    const name = soldItem.name || "Unknown product";
+
+                    const key = soldItem.productId || name;
+
+                    if (!productSales[key]) {
+
+                        productSales[key] = {
+                            name: name,
+                            quantity: 0,
+                            revenue: 0
+                        };
+
+                    }
+
+                    const quantity =
+                        Number.isSafeInteger(Number(soldItem.quantity)) &&
+                        Number(soldItem.quantity) > 0
+                            ? Number(soldItem.quantity)
+                            : 1;
+
+                    const subtotal = Number.isFinite(
+                        Number(soldItem.subtotal)
+                    )
+                        ? Number(soldItem.subtotal)
+                        : Number(soldItem.price || 0) * quantity;
+
+                    productSales[key].quantity += quantity;
+
+                    productSales[key].revenue += subtotal;
+
+                });
+
+            } else {
+
+                // Older single-product or manually recorded sales.
+                const name = item.description || "Other sale";
+
+                const key = name;
+
+                if (!productSales[key]) {
+
+                    productSales[key] = {
+                        name: name,
+                        quantity: 0,
+                        revenue: 0
+                    };
+
+                }
+
+                const quantity =
+                    Number.isSafeInteger(Number(item.quantity)) &&
+                    Number(item.quantity) > 0
+                        ? Number(item.quantity)
+                        : 1;
+
+                productSales[key].quantity += quantity;
+
+                productSales[key].revenue += Number(item.amount || 0);
+
+            }
+
+        });
+
+
+    // Sort products by revenue, highest first.
+    const sortedProducts = Object.values(productSales)
+        .sort((a, b) => b.revenue - a.revenue);
+
+
+    // ======================================
+    // CREATE PRODUCT BREAKDOWN HTML
+    // ======================================
+
+let productHTML = "";
+
+if (sortedProducts.length === 0) {
+
+    productHTML = `
+        <p class="no-sales-message">
+            No sales recorded in this period.
+        </p>
+    `;
+
+} else {
+
+    const totalUnits = sortedProducts.reduce(
+        (total, product) => total + product.quantity,
+        0
+    );
+
+    const totalRevenue = sortedProducts.reduce(
+        (total, product) => total + product.revenue,
+        0
+    );
+
+    productHTML = `
+
+        <div class="product-table-wrap">
+
+            <table class="product-report-table">
+
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Quantity</th>
+                        <th>Revenue</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    ${sortedProducts.map(product => `
+                        <tr>
+                            <td>
+                                ${escapeReportText(product.name)}
+                            </td>
+
+                            <td>
+                                ${product.quantity}
+                            </td>
+
+                            <td>
+                                ${formatMoney(product.revenue)}
+                            </td>
+                        </tr>
+                    `).join("")}
+
+                </tbody>
+
+                <tfoot>
+                    <tr>
+                        <td>Total</td>
+                        <td>${totalUnits} units</td>
+                        <td>${formatMoney(totalRevenue)}</td>
+                    </tr>
+                </tfoot>
+
+            </table>
+
+        </div>
+
+    `;
+
+}
+
+    // ======================================
+    // DISPLAY BOTH REPORT SECTIONS
+    // ======================================
+
+    reportCharts.innerHTML = `
+
+        <div class="chart-card">
+
+            <h3>Sales vs Expenses</h3>
+
+            <div class="chart-row">
+
+                <span class="chart-label">Sales</span>
+
+                <div class="chart-track">
+
+                    <div
+                        class="chart-bar sales-bar"
+                        style="width: ${salesWidth}%">
+                    </div>
+
+                </div>
+
+                <strong>${formatMoney(totalSales)}</strong>
+
+            </div>
+
+
+            <div class="chart-row">
+
+                <span class="chart-label">Expenses</span>
+
+                <div class="chart-track">
+
+                    <div
+                        class="chart-bar expenses-bar"
+                        style="width: ${expensesWidth}%">
+                    </div>
+
+                </div>
+
+                <strong>${formatMoney(totalExpenses)}</strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="chart-card">
+
+            <h3>Sales Breakdown</h3>
+
+            <div class="product-report-list">
+
+                ${productHTML}
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+// ==========================================
+// 27. REPORT DATE INPUT LISTENERS
+// ==========================================
+
+if (reportDate) {
+
+    reportDate.addEventListener(
+        "change",
+        updateReportCharts
+    );
+
+}
+
+if (reportEndDate) {
+
+    reportEndDate.addEventListener(
+        "change",
+        updateReportCharts
+    );
+
+}
+
+
+// ==========================================
+// 28. FINAL INITIALIZATION
+// ==========================================
+
+// Refresh the main dashboard.
+updateDashboard();
+
+// Refresh transaction history.
+displayTransactions();
+
+// Refresh inventory.
+displayProducts();
+
+// Refresh product selection in the sale form.
+populateSaleProducts();
+
+// Refresh sale form fields.
+updateSaleFields();
+
+
+// ==========================================
+// END OF PART 3
+// ==========================================
+                
