@@ -1969,4 +1969,496 @@ backupFile.addEventListener("change", function() {
 
             transactions = data.transactions;
             products = data.products;
-                                            
+
+        
+            saveData();
+            saveProducts();
+
+            updateDashboard();
+            displayTransactions();
+            displayProducts();
+            populateSaleProducts();
+            updateSaleFields();
+
+            showMiniBizAlert("MiniBiz backup restored successfully!");
+
+        } catch (error) {
+
+            showMiniBizAlert("Unable to read this backup file.");
+
+        }
+
+    };
+
+    reader.readAsText(file);
+
+    backupFile.value = "";
+
+});
+
+
+// ==========================================
+// 14. BUSINESS REPORTS
+// ==========================================
+
+// All report elements are declared together
+// before any report functions are called.
+
+const reportPeriod =
+    document.getElementById("reportPeriod");
+
+const reportDate =
+    document.getElementById("reportDate");
+
+const reportSummary =
+    document.getElementById("reportSummary");
+
+const reportCharts =
+    document.getElementById("reportCharts");
+
+const reportModal =
+    document.getElementById("reportModal");
+
+const openReportModalButton =
+    document.getElementById("openReportModalButton");
+
+const cancelReportModalButton =
+    document.getElementById("cancelReportModalButton");
+
+const reportModalForm =
+    document.getElementById("reportModalForm");
+
+const reportEndDateField =
+    document.getElementById("reportEndDateField");
+
+const reportEndDate =
+    document.getElementById("reportEndDate");
+
+
+// ==========================================
+// 15. REPORT DATE HELPERS
+// ==========================================
+
+// Get local date in YYYY-MM-DD format
+
+function getLocalDateValue(date) {
+
+    const year = date.getFullYear();
+
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+
+}
+
+
+// Parse transaction dates
+
+function parseTransactionDate(dateText) {
+
+    const match = String(dateText || "").match(
+        /^(\d{1,2})\/(\d{1,2})\/(\d{4})/
+    );
+
+    if (match) {
+
+        return new Date(
+            Number(match[3]),
+            Number(match[2]) - 1,
+            Number(match[1])
+        );
+
+    }
+
+    const parsed = new Date(dateText);
+
+    return isNaN(parsed.getTime()) ? null : parsed;
+
+}
+
+
+// ==========================================
+// 16. SHARED REPORT DATE CALCULATION
+// ==========================================
+
+// Both summary and charts use this function.
+// This prevents date-range mismatches.
+
+function getReportDateRange() {
+
+    if (!reportDate.value) {
+        return null;
+    }
+
+    const selectedDate = new Date(
+        reportDate.value + "T00:00:00"
+    );
+
+    let startDate = new Date(selectedDate);
+
+    let endDate = new Date(selectedDate);
+
+    const period = reportPeriod.value;
+
+    if (period === "custom") {
+
+        if (!reportEndDate.value) {
+            return null;
+        }
+
+        endDate = new Date(
+            reportEndDate.value + "T00:00:00"
+        );
+
+        if (
+            isNaN(endDate.getTime()) ||
+            endDate < startDate
+        ) {
+
+            return null;
+
+        }
+
+        // Include the entire end date
+
+        endDate.setDate(endDate.getDate() + 1);
+
+    } else if (period === "weekly") {
+
+        const day = (selectedDate.getDay() + 6) % 7;
+
+        startDate.setDate(
+            selectedDate.getDate() - day
+        );
+
+        endDate = new Date(startDate);
+
+        endDate.setDate(
+            startDate.getDate() + 7
+        );
+
+    } else if (period === "monthly") {
+
+        startDate = new Date(
+            selectedDate.getFullYear(),
+            selectedDate.getMonth(),
+            1
+        );
+
+        endDate = new Date(
+            selectedDate.getFullYear(),
+            selectedDate.getMonth() + 1,
+            1
+        );
+
+    } else {
+
+        // Daily report
+
+        endDate.setDate(endDate.getDate() + 1);
+
+    }
+
+    return {
+        startDate: startDate,
+        endDate: endDate
+    };
+
+}
+
+
+// Get transactions for selected report period
+
+function getReportTransactions() {
+
+    const range = getReportDateRange();
+
+    if (!range) {
+        return null;
+    }
+
+    return transactions.filter(item => {
+
+        const transactionDate =
+            parseTransactionDate(item.date);
+
+        return transactionDate &&
+            transactionDate >= range.startDate &&
+            transactionDate < range.endDate;
+
+    });
+
+}
+
+
+// ==========================================
+// 17. REPORT SUMMARY
+// ==========================================
+
+function generateBusinessReport() {
+
+    if (!reportPeriod || !reportDate || !reportSummary) {
+        return false;
+    }
+
+    if (!reportDate.value) {
+
+        reportSummary.innerHTML =
+            "<p>Please choose a start date.</p>";
+
+        return false;
+
+    }
+
+    if (
+        reportPeriod.value === "custom" &&
+        !reportEndDate.value
+    ) {
+
+        reportSummary.innerHTML =
+            "<p>Please choose an end date.</p>";
+
+        return false;
+
+    }
+
+    const filteredTransactions =
+        getReportTransactions();
+
+    if (!filteredTransactions) {
+
+        reportSummary.innerHTML =
+            "<p>End date cannot be earlier than start date.</p>";
+
+        return false;
+
+    }
+
+    const reportSales = filteredTransactions
+        .filter(item => item.type === "Sale")
+        .reduce((total, item) => total + item.amount, 0);
+
+    const reportExpenses = filteredTransactions
+        .filter(item => item.type === "Expense")
+        .reduce((total, item) => total + item.amount, 0);
+
+    const reportProfit = reportSales - reportExpenses;
+
+    const salesCount = filteredTransactions.filter(
+        item => item.type === "Sale"
+    ).length;
+
+    const expensesCount = filteredTransactions.filter(
+        item => item.type === "Expense"
+    ).length;
+
+    let periodName = "Daily";
+
+    if (reportPeriod.value === "weekly") {
+        periodName = "Weekly";
+    }
+
+    if (reportPeriod.value === "monthly") {
+        periodName = "Monthly";
+    }
+
+    if (reportPeriod.value === "custom") {
+        periodName = "Custom Date Range";
+    }
+
+    // Display report summary
+
+    reportSummary.innerHTML = `
+
+        <h3>${periodName} Business Summary</h3>
+
+        <p>
+            <strong>Total Sales:</strong>
+            ${formatMoney(reportSales)}
+        </p>
+
+        <p>
+            <strong>Total Expenses:</strong>
+            ${formatMoney(reportExpenses)}
+        </p>
+
+        <p class="report-profit">
+            <strong>Net Profit:</strong>
+            ${formatMoney(reportProfit)}
+        </p>
+
+        <hr>
+
+        <p>
+            <strong>Number of Sales:</strong>
+            ${salesCount}
+        </p>
+
+        <p>
+            <strong>Number of Expenses:</strong>
+            ${expensesCount}
+        </p>
+
+        <p>
+            <strong>Total Transactions:</strong>
+            ${filteredTransactions.length}
+        </p>
+
+    `;
+
+    // Generate charts before closing popup
+
+    updateReportCharts();
+
+    return true;
+
+}
+
+
+// ==========================================
+// 18. REPORT POPUP CONTROLS
+// ==========================================
+
+// Set today's date
+
+reportDate.value = getLocalDateValue(new Date());
+
+reportEndDate.value = getLocalDateValue(new Date());
+
+
+// Display end date field only for custom range
+
+reportPeriod.addEventListener("change", function() {
+
+    reportEndDateField.hidden =
+        reportPeriod.value !== "custom";
+
+    updateReportCharts();
+
+});
+
+
+// Open report popup
+
+openReportModalButton.addEventListener("click", function() {
+
+    reportModal.hidden = false;
+
+});
+
+
+// Cancel report popup
+
+cancelReportModalButton.addEventListener("click", function() {
+
+    reportModal.hidden = true;
+
+});
+
+
+// Generate report and close popup only on success
+
+reportModalForm.addEventListener("submit", function(event) {
+
+    event.preventDefault();
+
+    const success = generateBusinessReport();
+
+    if (success) {
+
+        reportModal.hidden = true;
+
+    }
+
+});
+
+
+// ==========================================
+// 19. CUSTOM CALENDAR ELEMENTS
+// ==========================================
+
+const startDateButton =
+    document.getElementById("startDateButton");
+
+const endDateButton =
+    document.getElementById("endDateButton");
+
+const customCalendar =
+    document.getElementById("customCalendar");
+
+const calendarMonth =
+    document.getElementById("calendarMonth");
+
+const calendarDays =
+    document.getElementById("calendarDays");
+
+const calendarPrev =
+    document.getElementById("calendarPrev");
+
+const calendarNext =
+    document.getElementById("calendarNext");
+
+const calendarClose =
+    document.getElementById("calendarClose");
+
+
+let calendarTargetInput = reportDate;
+
+let calendarTargetButton = startDateButton;
+
+let calendarViewDate = new Date();
+
+
+// Format calendar date
+
+function formatCalendarDate(value) {
+
+    if (!value) {
+        return "Choose Date";
+    }
+
+    return new Date(value + "T00:00:00")
+        .toLocaleDateString("en-IN", {
+
+            day: "numeric",
+            month: "short",
+            year: "numeric"
+
+        });
+
+}
+
+
+// ==========================================
+// 20. RENDER CUSTOM CALENDAR
+// ==========================================
+
+function renderCalendar() {
+
+    const year = calendarViewDate.getFullYear();
+
+    const month = calendarViewDate.getMonth();
+
+    calendarMonth.textContent =
+        calendarViewDate.toLocaleDateString("en-IN", {
+
+            month: "long",
+            year: "numeric"
+
+        });
+
+    calendarDays.replaceChildren();
+
+    const firstDay =
+        new Date(year, month, 1).getDay();
+
+    const daysInMonth =
+        new Date(year, month + 1, 0).getDate();
+
+    const today = getLocalDateValue(new Date());
+
+    // Empty spaces before first day
+
+    for (let i = 0; i < firstDay; i++) {
