@@ -1,3 +1,4 @@
+
 /* MiniBiz - Complete Design */
 #backupText {
     width: 100%;
@@ -1036,5 +1037,190 @@ footer {
 .transaction-date-button:hover {
     border-color: #2563eb;
     background: #f8fafc;
-  }
-  
+}
+
+/* ==========================================
+   MINIBIZ PROFESSIONAL HOME SCREEN
+========================================== */
+
+.home-menu {
+    margin-top: 35px;
+}
+
+.home-menu h2 {
+    font-size: 25px;
+    margin-bottom: 8px;
+    color: #172554;
+}
+
+.home-menu > p {
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 22px;
+    line-height: 1.5;
+}
+
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.menu-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    text-align: left;
+    min-width: 0;
+    min-height: 145px;
+    padding: 17px 14px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+    color: #172554;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.menu-card:active {
+    transform: scale(0.97);
+    box-shadow: 0 2px 7px rgba(0, 0, 0, 0.08);
+}
+
+.menu-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 43px;
+    height: 43px;
+    margin-bottom: 13px;
+    background: #eff6ff;
+    border-radius: 12px;
+    font-size: 23px;
+}
+
+.menu-card strong {
+    font-size: 15px;
+    margin-bottom: 6px;
+    color: #172554;
+}
+
+.menu-card small {
+    font-size: 11px;
+    line-height: 1.5;
+    color: #64748b;
+}
+
+.menu-card:focus-visible {
+    outline: 3px solid #93c5fd;
+    outline-offset: 3px;
+}
+
+/* Larger screens */
+
+@media (min-width: 600px) {
+    .menu-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .menu-card {
+        min-height: 160px;
+        padding: 20px;
+    }
+}
+
+/* ==========================================
+   MINIBIZ DARK PREMIUM HOME CARDS
+========================================== */
+
+.menu-card {
+    background: linear-gradient(
+        145deg,
+        #243b70,
+        #172554
+    );
+
+    border: 1px solid #344b7d;
+
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.16);
+}
+
+.menu-card strong {
+    color: #ffffff;
+}
+
+.menu-card small {
+    color: #cbd5e1;
+}
+
+.menu-icon {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.menu-card:active {
+    background: linear-gradient(
+        145deg,
+        #172554,
+        #0f1b3d
+    );
+
+    transform: scale(0.97);
+}
+
+/* ==========================================
+   MINIBIZ PROFESSIONAL SETTINGS
+========================================== */
+
+.settings-card {
+    margin-top: 20px;
+    padding: 20px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+        border-radius: 16px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+}
+
+.settings-card h3 {
+    color: #172554;
+    font-size: 19px;
+    margin-bottom: 9px;
+}
+
+.settings-card p {
+    color: #64748b;
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+#languageSelect {
+    width: 100%;
+    min-height: 48px;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    background: #f8fafc;
+    color: #172554;
+    font-size: 15px;
+}
+
+.delete-data-card {
+    border-color: #fecaca;
+}
+
+.delete-all-data-button {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    background: #dc2626;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.delete-all-data-button:active {
+    background: #b91c1c;
+    transform: scale(0.98);
+}
