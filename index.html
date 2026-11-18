@@ -20,11 +20,66 @@
     </header>
 
     <main>
+      
+<div id="homeScreen">
 
-        <h2>Welcome to MiniBiz!</h2>
-        <p>Manage your small business with ease.</p>
+    <section class="home-menu">
 
-        <section class="dashboard">
+        <h2 data-i18n="welcome">Welcome to MiniBiz!</h2>
+
+        <p data-i18n="home_description">
+            Manage your small business with ease.
+        </p>
+
+        <div class="menu-grid">
+
+            <button class="menu-card" data-screen="dashboardScreen">
+                <span class="menu-icon">📊</span>
+                <strong data-i18n="dashboard">Dashboard</strong>
+                <small data-i18n="dashboard_desc">Sales, expenses and profit</small>
+            </button>
+
+            <button class="menu-card" data-screen="transactionsScreen">
+                <span class="menu-icon">💳</span>
+                <strong data-i18n="transactions">Transactions</strong>
+                <small data-i18n="transactions_desc">Manage business transactions</small>
+            </button>
+
+            <button class="menu-card" data-screen="inventoryScreen">
+                <span class="menu-icon">📦</span>
+                <strong data-i18n="inventory">Inventory</strong>
+                <small data-i18n="inventory_desc">Manage products and stock</small>
+            </button>
+
+            <button class="menu-card" data-screen="reportsScreen">
+                <span class="menu-icon">📈</span>
+                <strong data-i18n="reports">Reports</strong>
+                <small data-i18n="reports_desc">View business performance</small>
+            </button>
+
+            <button class="menu-card" data-screen="backupScreen">
+                <span class="menu-icon">🛡️</span>
+                <strong data-i18n="data_protection">Data Protection</strong>
+                <small data-i18n="data_protection_desc">Backup and restore records</small>
+            </button>
+
+            <button class="menu-card" data-screen="settingsScreen">
+                <span class="menu-icon">⚙️</span>
+                <strong data-i18n="settings">Settings</strong>
+                <small data-i18n="settings_desc">Language and data settings</small>
+            </button>
+
+        </div>
+
+    </section>
+
+</div>
+
+        <section id="dashboardScreen" class="app-screen dashboard">
+
+          <button type="button" class="back-home-button" data-screen="homeScreen">
+    ← Back to Home
+          </button>
 
             <div class="card">
                 <h3>Total Sales</h3>
@@ -43,7 +98,13 @@
 
         </section>
 
-        <section class="history">
+        <section id="transactionsScreen" class="app-screen">
+
+    <button type="button" class="back-home-button" data-screen="homeScreen">
+        ← Back to Home
+    </button>
+
+    <section class="history">
 
             <div class="section-heading">
                 <h2>Recent Transactions</h2>
@@ -196,85 +257,7 @@
             </div>
 
         </section>
-
-              <!-- Product Inventory -->
-
-        <section class="inventory">
-
-            <div class="section-heading">
-                <h2>Product Inventory</h2>
-                <p>Manage your available products.</p>
-            </div>
-
-            <div id="productList">
-                <p class="empty">No products added yet.</p>
-            </div>
-
-            <button id="addProductButton" class="primary-button">
-                + Add New Product
-            </button>
-
-        </section>
-
-        <!-- Add Product Form -->
-
-        <section id="productForm" class="form-card" hidden>
-
-            <h2>Add New Product</h2>
-
-            <form id="productEntryForm">
-
-                <label for="productName">Product Name</label>
-
-                <input
-                    type="text"
-                    id="productName"
-                    placeholder="e.g. Handmade Doily"
-                    maxlength="60"
-                    required
-                >
-
-                <label for="productPrice">Selling Price (₹)</label>
-
-                <input
-                    type="number"
-                    id="productPrice"
-                    placeholder="Enter price"
-                    min="0.01"
-                    step="0.01"
-                    required
-                >
-
-                <label for="productStock">Available Quantity</label>
-
-                <input
-                    type="number"
-                    id="productStock"
-                    placeholder="Enter stock quantity"
-                    min="0"
-                    step="1"
-                    required
-                >
-
-                <div class="form-buttons">
-
-                    <button type="submit" class="primary-button">
-                        Save Product
-                    </button>
-
-                    <button type="button" id="cancelProductButton"
-                        class="cancel-button">
-                        Cancel
-                    </button>
-
-                </div>
-
-            </form>
-
-        </section>
-
-
-       <button id="startButton" class="primary-button">
+          <button id="startButton" class="primary-button">
             + Add Transaction
         </button>
 
@@ -375,11 +358,101 @@
             </form>
 
         </section>
+    </section>
 
-      
+      <!-- Product Inventory -->
+
+      <section id="inventoryScreen" class="app-screen">
+
+    <button type="button" class="back-home-button" data-screen="homeScreen">
+        ← Back to Home
+    </button>
+
+        <section class="inventory">
+
+            <div class="section-heading">
+                <h2>Product Inventory</h2>
+                <p>Manage your available products.</p>
+            </div>
+
+            <div id="productList">
+                <p class="empty">No products added yet.</p>
+            </div>
+
+            <button id="addProductButton" class="primary-button">
+                + Add New Product
+            </button>
+
+        </section>
+
+        <!-- Add Product Form -->
+
+        <section id="productForm" class="form-card" hidden>
+
+            <h2>Add New Product</h2>
+
+            <form id="productEntryForm">
+
+                <label for="productName">Product Name</label>
+
+                <input
+                    type="text"
+                    id="productName"
+                    placeholder="e.g. Handmade Doily"
+                    maxlength="60"
+                    required
+                >
+
+                <label for="productPrice">Selling Price (₹)</label>
+
+                <input
+                    type="number"
+                    id="productPrice"
+                    placeholder="Enter price"
+                    min="0.01"
+                    step="0.01"
+                    required
+                >
+
+                <label for="productStock">Available Quantity</label>
+
+                <input
+                    type="number"
+                    id="productStock"
+                    placeholder="Enter stock quantity"
+                    min="0"
+                    step="1"
+                    required
+                >
+
+                <div class="form-buttons">
+
+                    <button type="submit" class="primary-button">
+                        Save Product
+                    </button>
+
+                    <button type="button" id="cancelProductButton"
+                        class="cancel-button">
+                        Cancel
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+      </section>
+
         <!-- Data Backup and Restore -->
 
-        <section class="backup-section">
+        <section id="backupScreen" class="app-screen">
+
+    <button type="button" class="back-home-button" data-screen="homeScreen">
+        ← Back to Home
+    </button>
+
+    <section class="backup-section">
 
             <h2>Data Protection</h2>
 
@@ -419,8 +492,60 @@
 
         </section>
 
-      
-<section class="report-section">
+        </section>
+
+
+<section id="settingsScreen" class="app-screen">
+
+    <button type="button" class="back-home-button" data-screen="homeScreen">
+        ← Back to Home
+    </button>
+
+    <h2>Settings</h2>
+
+    <p>Manage your MiniBiz account and data settings.</p>
+
+    <!-- FUTURE ACCOUNT SETTINGS -->
+
+    <div class="settings-card">
+
+        <h3>👤 My Account</h3>
+
+        <p>Account features will be available here in a future update.</p>
+
+    </div>
+
+    <!-- DATA MANAGEMENT -->
+
+    <div class="settings-card delete-data-card">
+
+        <h3>🗑️ Delete All Data</h3>
+
+        <p>
+            Permanently delete your MiniBiz business records
+            stored on this device.
+        </p>
+
+        <button
+            type="button"
+            id="deleteAllDataButton"
+            class="delete-all-data-button">
+
+            Delete All Data
+
+        </button>
+
+    </div>
+
+</section>
+
+      <section id="reportsScreen" class="app-screen">
+
+    <button type="button" class="back-home-button" data-screen="homeScreen">
+        ← Back to Home
+    </button>
+
+    <section class="report-section">
 
     <h2>Business Reports</h2>
 
@@ -436,6 +561,7 @@
 
 </section>
 
+</section>
 
 <!-- Report Date Selection Popup -->
 
@@ -542,7 +668,6 @@
 
 </div>
 
-
     </main>
 
     <footer>
@@ -607,5 +732,5 @@ if ("serviceWorker" in navigator) {
 
 </body>
 
-</html>
-
+            </html>
+            
