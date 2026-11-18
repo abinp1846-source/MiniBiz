@@ -2956,3 +2956,115 @@ updateSaleFields();
 // END OF PART 3
 // ==========================================
                 
+// ==========================================
+// 29. HOME SCREEN NAVIGATION
+// ==========================================
+
+function showScreen(screenId) {
+
+    const screenIds = [
+        "homeScreen",
+        "dashboardScreen",
+        "transactionsScreen",
+        "inventoryScreen",
+        "reportsScreen",
+        "backupScreen",
+        "settingsScreen"
+    ];
+
+    screenIds.forEach(id => {
+
+        const screen = document.getElementById(id);
+
+        if (screen) {
+            screen.hidden = id !== screenId;
+        }
+
+    });
+
+    window.scrollTo(0, 0);
+
+}
+
+
+// Open selected screen from home cards.
+document.querySelectorAll(".menu-card").forEach(card => {
+
+    card.addEventListener("click", function() {
+
+        showScreen(this.dataset.screen);
+
+    });
+
+});
+
+
+// Return to home screen.
+document.querySelectorAll(".back-home-button").forEach(button => {
+
+    button.addEventListener("click", function() {
+
+        showScreen(this.dataset.screen);
+
+    });
+
+});
+
+
+// Show home screen when MiniBiz opens.
+showScreen("homeScreen");
+// ==========================================
+// 30. DELETE ALL BUSINESS DATA
+// ==========================================
+
+const deleteAllDataButton =
+    document.getElementById("deleteAllDataButton");
+
+deleteAllDataButton.addEventListener("click", async function() {
+
+    const confirmed = await showMiniBizConfirm(
+        "Are you sure you want to permanently delete all your sales, expenses, transactions and products? This action cannot be undone. Please create a backup before continuing."
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+
+        // Delete saved business data only
+
+        localStorage.removeItem("minibiz_sales");
+        localStorage.removeItem("minibiz_expenses");
+        localStorage.removeItem("minibiz_transactions");
+        localStorage.removeItem("minibiz_products");
+
+        // Reset saved data in memory
+
+        sales = 0;
+        expenses = 0;
+        transactions = [];
+        products = [];
+        saleCart = [];
+
+        // Refresh MiniBiz screens
+
+        updateDashboard();
+        displayTransactions();
+        displayProducts();
+
+        // Show success notification
+
+        await showMiniBizAlert(
+            "All MiniBiz business data has been deleted successfully."
+        );
+
+    } catch (error) {
+
+        await showMiniBizAlert(
+            "Unable to delete all data. Please try again."
+        );
+
+    }
+
+});
