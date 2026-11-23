@@ -1,5 +1,12 @@
-
 // MiniBiz - Improved Business Manager
+// ==========================================
+// SUPABASE CONNECTION
+// ==========================================
+
+const miniBizSupabase = window.supabase.createClient(
+    "https://hgoaivwpmqvmnhyfrxve.supabase.co",
+    "sb_publishable_Afp4ruYqQGGGWMPKEJrMMA_CDzTKUYU"
+);
 
 // ==========================================
 // 1. LOAD SAVED FINANCIAL DATA
