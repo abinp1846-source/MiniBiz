@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "minibiz-v1";
+const CACHE_NAME = "minibiz-v2";
 
 const FILES_TO_CACHE = [
     "./",
