@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,7 +8,8 @@
 
     <title>MiniBiz - Business Manager</title>
 
-    <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
@@ -505,15 +505,99 @@
 
     <p>Manage your MiniBiz account and data settings.</p>
 
-    <!-- FUTURE ACCOUNT SETTINGS -->
+  
+        <!-- MY ACCOUNT -->
 
-    <div class="settings-card">
+<div class="settings-card" id="accountCard">
 
-        <h3>👤 My Account</h3>
+    <h3>👤 My Account</h3>
 
-        <p>Account features will be available here in a future update.</p>
+    <!-- Logged Out View -->
+    <div id="loggedOutView">
+
+        <p>Sign in or create an account to access your business records across devices.</p>
+
+        <div id="accountChoice">
+
+            <button type="button" id="showLoginButton">
+                Login
+            </button>
+
+            <button type="button" id="showSignupButton">
+                Create Account
+            </button>
+
+        </div>
+
+        <!-- SIGN UP FORM -->
+
+        <form id="signupForm" hidden>
+
+            <h4>Create Your MiniBiz Account</h4>
+
+            <label for="signupBusinessName">Business Name</label>
+            <input type="text" id="signupBusinessName" required
+                placeholder="Enter your business name">
+
+            <label for="signupEmail">Email Address</label>
+            <input type="email" id="signupEmail" required
+                placeholder="Enter your email">
+
+            <label for="signupPassword">Password</label>
+            <input type="password" id="signupPassword"
+                minlength="6" required
+                placeholder="At least 6 characters">
+
+            <button type="submit">Create Account</button>
+
+            <button type="button" id="backFromSignupButton">
+                Back
+            </button>
+
+        </form>
+
+        <!-- LOGIN FORM -->
+
+        <form id="loginForm" hidden>
+
+            <h4>Login to MiniBiz</h4>
+
+            <label for="loginEmail">Email Address</label>
+            <input type="email" id="loginEmail" required
+                placeholder="Enter your email">
+
+            <label for="loginPassword">Password</label>
+            <input type="password" id="loginPassword" required
+                placeholder="Enter your password">
+
+            <button type="submit">Login</button>
+
+            <button type="button" id="backFromLoginButton">
+                Back
+            </button>
+
+        </form>
 
     </div>
+
+    <!-- LOGGED IN VIEW -->
+
+    <div id="loggedInView" hidden>
+
+        <p>Account: <strong id="accountEmail"></strong></p>
+
+        <p>Business: <strong id="accountBusinessName"></strong></p>
+
+        <button type="button" id="logoutButton">
+            Logout
+        </button>
+
+    </div>
+
+    <p id="accountMessage" aria-live="polite"></p>
+
+</div>
+
 
     <!-- DATA MANAGEMENT -->
 
@@ -719,7 +803,6 @@
 </div>
 
   <script src="app.js"></script>
-
   <script>
 if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
@@ -732,5 +815,5 @@ if ("serviceWorker" in navigator) {
 
 </body>
 
-            </html>
-            
+</html>
+
