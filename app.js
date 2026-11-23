@@ -3075,3 +3075,308 @@ deleteAllDataButton.addEventListener("click", async function() {
     }
 
 });
+// ==========================================
+// 31. ACCOUNT NAVIGATION AND AUTHENTICATION
+// ==========================================
+
+const accountChoice = document.getElementById("accountChoice");
+
+const signupForm = document.getElementById("signupForm");
+const loginForm = document.getElementById("loginForm");
+
+const loggedOutView = document.getElementById("loggedOutView");
+const loggedInView = document.getElementById("loggedInView");
+
+const accountMessage = document.getElementById("accountMessage");
+
+function showAccountMessage(message) {
+    accountMessage.textContent = message;
+}
+
+// ==========================================
+// ACCOUNT FORM NAVIGATION
+// ==========================================
+
+document.getElementById("showLoginButton")
+    .addEventListener("click", function() {
+
+        accountChoice.hidden = true;
+        signupForm.hidden = true;
+        loginForm.hidden = false;
+
+        showAccountMessage("");
+
+    });
+
+document.getElementById("showSignupButton")
+    .addEventListener("click", function() {
+
+        accountChoice.hidden = true;
+        loginForm.hidden = true;
+        signupForm.hidden = false;
+
+        showAccountMessage("");
+
+    });
+
+document.getElementById("backFromSignupButton")
+    .addEventListener("click", function() {
+
+        signupForm.hidden = true;
+        accountChoice.hidden = false;
+
+        showAccountMessage("");
+
+    });
+
+document.getElementById("backFromLoginButton")
+    .addEventListener("click", function() {
+
+        loginForm.hidden = true;
+        accountChoice.hidden = false;
+
+        showAccountMessage("");
+
+    });
+
+// ==========================================
+// LOAD BUSINESS PROFILE
+// ==========================================
+
+async function loadBusinessProfile(user) {
+
+    loggedOutView.hidden = true;
+    loggedInView.hidden = false;
+
+    document.getElementById("accountEmail").textContent =
+        user.email || "";
+
+    showAccountMessage("Loading your business profile...");
+
+    // Check whether this user already has a business
+
+    const { data: business, error } =
+        await miniBizSupabase
+            .from("businesses")
+            .select("id, name")
+            .eq("owner_id", user.id)
+            .maybeSingle();
+
+    if (error) {
+
+        showAccountMessage(
+            "Could not load your business profile: " + error.message
+        );
+
+        return;
+    }
+
+    // Create a business profile if one does not exist
+
+    if (!business) {
+
+        const businessName =
+            user.user_metadata?.business_name;
+
+        if (!businessName) {
+
+            showAccountMessage(
+                "Business name not found. Please contact support."
+            );
+
+            return;
+        }
+
+        const { data: newBusiness, error: insertError } =
+            await miniBizSupabase
+                .from("businesses")
+                .insert({
+                    owner_id: user.id,
+                    name: businessName
+                })
+                .select("id, name")
+                .single();
+
+        if (insertError) {
+
+            showAccountMessage(
+                "Could not create business profile: " +
+                insertError.message
+            );
+
+            return;
+        }
+
+        document.getElementById("accountBusinessName").textContent =
+            newBusiness.name;
+
+    } else {
+
+        document.getElementById("accountBusinessName").textContent =
+            business.name;
+
+    }
+
+    showAccountMessage("Your account is ready!");
+
+}
+
+// ==========================================
+// CREATE ACCOUNT
+// ==========================================
+
+signupForm.addEventListener("submit", async function(event) {
+
+    event.preventDefault();
+
+    const businessName =
+        document.getElementById("signupBusinessName").value.trim();
+
+    const email =
+        document.getElementById("signupEmail").value.trim();
+
+    const password =
+        document.getElementById("signupPassword").value;
+
+    if (!businessName) {
+
+        showAccountMessage("Please enter your business name.");
+        return;
+
+    }
+
+    showAccountMessage("Creating your account...");
+
+    const { data, error } =
+        await miniBizSupabase.auth.signUp({
+
+            email: email,
+            password: password,
+
+            options: {
+                data: {
+                    business_name: businessName
+                }
+            }
+
+        });
+
+    if (error) {
+
+        showAccountMessage(error.message);
+        return;
+
+    }
+
+    signupForm.reset();
+
+    if (data.session && data.user) {
+
+        await loadBusinessProfile(data.user);
+
+    } else {
+
+        signupForm.hidden = true;
+        accountChoice.hidden = true;
+
+        showAccountMessage(
+            "Account created! Please check your email and click the verification link. Then return to MiniBiz and log in."
+        );
+
+    }
+
+});
+
+// ==========================================
+// LOGIN
+// ==========================================
+
+loginForm.addEventListener("submit", async function(event) {
+
+    event.preventDefault();
+
+    const email =
+        document.getElementById("loginEmail").value.trim();
+
+    const password =
+        document.getElementById("loginPassword").value;
+
+    showAccountMessage("Logging in...");
+
+    const { data, error } =
+        await miniBizSupabase.auth.signInWithPassword({
+
+            email: email,
+            password: password
+
+        });
+
+    if (error) {
+
+        showAccountMessage(error.message);
+        return;
+
+    }
+
+    loginForm.reset();
+
+    await loadBusinessProfile(data.user);
+
+});
+
+// ==========================================
+// LOGOUT
+// ==========================================
+
+document.getElementById("logoutButton")
+    .addEventListener("click", async function() {
+
+        showAccountMessage("Logging out...");
+
+        const { error } =
+            await miniBizSupabase.auth.signOut();
+
+        if (error) {
+
+            showAccountMessage(error.message);
+            return;
+
+        }
+
+        loggedInView.hidden = true;
+        loggedOutView.hidden = false;
+
+        accountChoice.hidden = false;
+        signupForm.hidden = true;
+        loginForm.hidden = true;
+
+        showAccountMessage("You have logged out.");
+
+    });
+
+// ==========================================
+// CHECK EXISTING LOGIN SESSION
+// ==========================================
+
+async function checkExistingAccount() {
+
+    const { data, error } =
+        await miniBizSupabase.auth.getSession();
+
+    if (error) {
+
+        showAccountMessage(error.message);
+        return;
+
+    }
+
+    if (data.session) {
+
+        await loadBusinessProfile(data.session.user);
+
+    }
+
+}
+
+checkExistingAccount();
+            
