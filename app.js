@@ -3254,9 +3254,11 @@ signupForm.addEventListener("submit", async function(event) {
             password: password,
 
             options: {
-                data: {
-                    business_name: businessName
-                }
+    emailRedirectTo: "https://abinp1846-source.github.io/MiniBiz/",
+
+    data: {
+        business_name: businessName
+    }
             }
 
         });
